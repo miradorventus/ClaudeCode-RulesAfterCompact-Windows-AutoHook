@@ -108,17 +108,26 @@ reminder telling Claude to re-read the file. That is cheaper per compaction but
 depends on Claude actually performing the read. Injecting the content is more
 reliable and costs more. Pick per file size.
 
-## Manual install
+## Read it before you run it
 
-If you would rather do it by hand than by prompt, the hook script is
-[hooks/post-compact-reminder.ps1](hooks/post-compact-reminder.ps1) and the
-settings entry is [settings.example.json](settings.example.json). Two rules:
+You should not paste a prompt that writes a script onto your machine without
+knowing what the script does. It is twenty lines, and both pieces are here:
+
+- [hooks/post-compact-reminder.ps1](hooks/post-compact-reminder.ps1) - the hook
+- [settings.example.json](settings.example.json) - the settings entry
+
+**They are here to be read, not downloaded.** Save that `.ps1` from GitHub and run
+it and Windows will refuse it - unsigned, Mark of the Web - which is the exact
+error at the top of this page. That is not a flaw in the file; it is the reason
+the install is a prompt. The prompt contains the same script verbatim, and
+Claude writes it locally where the policy does not apply.
+
+If you would rather type it out yourself, two rules:
 
 - Use an **absolute** path in the hook command. A relative path breaks it.
 - Save the `.ps1` as **pure ASCII, no BOM**. PowerShell 5.1 reads a BOM-less
   file as ANSI, so any non-ASCII character in the script itself is a second
   instance of the same bug.
-
 ## Notes for anyone writing Claude Code hooks on Windows
 
 Collected the hard way, each one field-tested:
