@@ -1,13 +1,12 @@
-# AutoHook - Claude Code compact hook for Windows
+# AutoHook
 
-**Claude Code forgets your rules after it compacts the conversation.** This puts
-them back — on Windows, where the usual fix quietly corrupts every accented
-character before Claude ever reads it.
+**Claude Code forgets your standing rules every time it compacts the
+conversation. This puts them back.** For Windows, where the obvious fix
+silently destroys every accented character before Claude ever reads it.
 
 ## Install
 
-Nothing to download. Copy the block below and paste it into Claude Code - the
-copy button is at its top right corner. Claude writes the files itself.
+Copy this and paste it into Claude Code. Nothing to download, nothing to run.
 
 ```
 Install a post-compaction rules reminder hook for Claude Code on this Windows machine.
@@ -89,11 +88,28 @@ KB, since its whole content is re-injected at every compaction. If it does not
 exist, say so: the hook has nothing to inject until I create it.
 ```
 
-Then nothing happens, until the next compaction. When Claude Code compacts the
-conversation the hook fires and your rules land back in context. Ask Claude what
-your standing rules are, right after a compaction, and you will know it worked.
+That is the whole install. Nothing visible happens until your next compaction -
+then your rules come back on their own. Ask Claude what your standing rules are,
+right after a compaction, and you will know it worked.
 
-## Why a prompt instead of an installer
+---
+
+<details>
+<summary><b>Uninstall</b></summary>
+
+Paste this instead:
+
+```
+Remove the AutoHook post-compaction hook from this machine: delete the
+"SessionStart" entry whose matcher is "compact" and whose command points at
+post-compact-reminder.ps1 from %USERPROFILE%\.claude\settings.json, keep the rest
+of the file intact, then delete %USERPROFILE%\.claude\hooks\post-compact-reminder.ps1.
+```
+
+</details>
+
+<details>
+<summary><b>Why a prompt, and not an installer</b></summary>
 
 Because a downloaded installer does not run on a default Windows machine.
 Measured, on Windows 11 with factory settings:
@@ -128,7 +144,10 @@ should have to switch a protection off to install a reminder.
 (Smart App Control, for the record, is not the blocker here. It was enforcing on
 the test machine and PowerShell still ran in FullLanguage.)
 
-## The trap this exists for
+</details>
+
+<details>
+<summary><b>The encoding trap this exists for</b></summary>
 
 Claude Code injects a hook's stdout directly into the model's context. On
 Windows, PowerShell re-encodes that stdout in the console's ANSI codepage on the
@@ -170,7 +189,10 @@ One statement, prepended to the hook. With it, the round-trip is byte-identical.
 Note that `Get-Content -Encoding UTF8` does **not** cover this. That fixes
 reading the file. The corruption happens on the way out.
 
-## What it costs
+</details>
+
+<details>
+<summary><b>What it costs you</b></summary>
 
 The hook injects the **whole** rules file, every time the conversation is
 compacted. That is a recurring token cost, so keep the file short: a page of
@@ -188,7 +210,10 @@ reminder telling Claude to re-read the file. That is cheaper per compaction but
 depends on Claude actually performing the read. Injecting the content is more
 reliable and costs more. Pick per file size.
 
-## Read it before you run it
+</details>
+
+<details>
+<summary><b>Reading it before you run it</b></summary>
 
 You should not paste a prompt that writes a script onto your machine without
 knowing what the script does. It is twenty lines, and both pieces are here:
@@ -209,18 +234,10 @@ If you would rather type it out yourself, two rules:
   file as ANSI, so any non-ASCII character in the script itself is a second
   instance of the same bug.
 
-## Uninstall
+</details>
 
-Paste this instead:
-
-```
-Remove the AutoHook post-compaction hook from this machine: delete the
-"SessionStart" entry whose matcher is "compact" and whose command points at
-post-compact-reminder.ps1 from %USERPROFILE%\.claude\settings.json, keep the rest
-of the file intact, then delete %USERPROFILE%\.claude\hooks\post-compact-reminder.ps1.
-```
-
-## Notes for anyone writing Claude Code hooks on Windows
+<details>
+<summary><b>Notes for anyone writing Claude Code hooks on Windows</b></summary>
 
 Collected the hard way, each one field-tested:
 
@@ -238,7 +255,10 @@ Collected the hard way, each one field-tested:
 - **A hook that exits non-zero on every session start is worse than no hook.**
   Fail quietly and say why in stdout.
 
-## Tested on
+</details>
+
+<details>
+<summary><b>Tested on</b></summary>
 
 - Windows 11 Pro 26100, Windows PowerShell 5.1.26100
 - Claude Code, `SessionStart` hook with `matcher: "compact"`, verified end to end
@@ -247,7 +267,10 @@ Collected the hard way, each one field-tested:
 
 Everything in this README was measured on that machine. Nothing is inferred.
 
-## Prior art
+</details>
+
+<details>
+<summary><b>Prior art</b></summary>
 
 This is the Windows-native complement to work that already exists, not a
 replacement for it:
@@ -262,6 +285,8 @@ replacement for it:
 
 No code from either is used here.
 
-## License
+</details>
 
-MIT — see [LICENSE](LICENSE).
+---
+
+MIT - see [LICENSE](LICENSE).
