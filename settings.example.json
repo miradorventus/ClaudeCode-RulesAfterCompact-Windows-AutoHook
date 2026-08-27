@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\YOURNAME\\.claude\\hooks\\post-compact-reminder.ps1\"",
+            "timeout": 15,
+            "statusMessage": "Restoring standing rules after compaction"
+          }
+        ]
+      }
+    ]
+  }
+}
