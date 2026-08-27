@@ -36,10 +36,17 @@ STEP 1 - Create %USERPROFILE%\.claude\hooks\post-compact-reminder.ps1 with exact
 
 Save it as pure ASCII with no BOM.
 
-STEP 2 - Back up %USERPROFILE%\.claude\settings.json (copy it to settings.json.bak-autohook),
-This file is outside the project directory, so ask me for permission in one go,
-saying plainly that you are editing settings.json and nothing else.
-then add this entry. Merge carefully - do NOT overwrite anything:
+STEP 2 - Edit %USERPROFILE%\.claude\settings.json. This is my GLOBAL Claude Code
+settings file, outside any project, so tell me plainly that the hook will then fire
+in every Claude Code session on this machine - and ask for permission in one go,
+naming that one file and nothing else.
+
+If the file already exists, copy it to settings.json.bak-autohook first.
+If it does NOT exist, create it, and also create an empty marker file next to it
+named settings.json.absent-before-autohook, so the uninstall knows the file was not
+there before and can remove it cleanly.
+
+Then add this entry. Merge carefully - do NOT overwrite anything:
   - if there is no "hooks" object, create it;
   - if "hooks" exists but has no "SessionStart", add that key;
   - if "SessionStart" already exists, APPEND this object to its array and leave
@@ -104,31 +111,38 @@ right after a compaction, and you will know it worked.
 <details>
 <summary><b>Uninstall</b></summary>
 
-One command in PowerShell. It restores the backup the install made and deletes
-the hook script:
+One command in PowerShell. It puts `settings.json` back the way it was - restoring
+the backup if the file already existed, removing it if the install created it -
+and deletes the hook script.
 
 ```powershell
 $c = "$env:USERPROFILE\.claude"
 if (Test-Path "$c\settings.json.bak-autohook") {
   Copy-Item "$c\settings.json.bak-autohook" "$c\settings.json" -Force
   Remove-Item "$c\settings.json.bak-autohook" -Force
-  "settings.json restored"
-} else { "no backup found - remove the SessionStart compact entry by hand" }
+  "settings.json restored from backup"
+} elseif (Test-Path "$c\settings.json.absent-before-autohook") {
+  Remove-Item "$c\settings.json" -Force -ErrorAction SilentlyContinue
+  Remove-Item "$c\settings.json.absent-before-autohook" -Force
+  "settings.json removed - it did not exist before the install"
+} else { "no backup and no marker - remove the SessionStart compact entry by hand" }
 Remove-Item "$c\hooks\post-compact-reminder.ps1" -Force -ErrorAction SilentlyContinue
 "hook removed"
 ```
 
-It restores the backup, so anything else you changed in `settings.json` after
-installing goes back too. Minutes after an install that is nothing; months later
-it might not be, and then the paste below is the safer route.
+The first branch restores a backup, so anything else you changed in
+`settings.json` after installing goes back too. Minutes after an install that is
+nothing; months later it might not be, and then the paste below is safer.
 
 Or paste this into Claude Code instead:
 
 ```
 Remove the AutoHook post-compaction hook from this machine: delete the
 "SessionStart" entry whose matcher is "compact" and whose command points at
-post-compact-reminder.ps1 from %USERPROFILE%\.claude\settings.json, keep the rest
-of the file intact, then delete %USERPROFILE%\.claude\hooks\post-compact-reminder.ps1.
+post-compact-reminder.ps1 from %USERPROFILE%\.claude\settings.json, keeping every
+other setting byte-for-byte. If that entry was the only thing in the file and
+a settings.json.absent-before-autohook marker is present, delete both instead.
+Then delete %USERPROFILE%\.claude\hooks\post-compact-reminder.ps1.
 ```
 </details>
 
