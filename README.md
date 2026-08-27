@@ -31,10 +31,19 @@ downloaded from GitHub does. Getting past it takes a paid code-signing
 certificate, or teaching users to disable their own security. Neither is
 shipping.
 
-A prompt has none of that surface. Claude writes the file locally, and a locally
-created file has no Mark of the Web. Nothing is downloaded, no execution policy
-applies, no signature is needed. Everyone installing a Claude Code hook already
-has the installer: Claude.
+A prompt removes that surface. Claude writes the file locally, and a locally
+created file carries no Mark of the Web - which is the whole of what
+`RemoteSigned` refuses. Measured both ways on the same script: unmarked it runs,
+marked it is rejected. Everyone installing a Claude Code hook already has the
+installer: Claude.
+
+Execution policy does not stop existing, of course, and you will notice the hook
+command passes `-ExecutionPolicy Bypass`. That is there for anyone on `AllSigned`
+or `Restricted`, where even a local script is refused. Two things about that flag:
+it lasts exactly as long as that one process and changes nothing on the machine,
+and it is the tool applying it to itself rather than you being told to loosen a
+setting of your own. That distinction is the entire point of this repo. Nobody
+should have to switch a protection off to install a reminder.
 
 (Smart App Control, for the record, is not the blocker here. It was enforcing on
 the test machine and PowerShell still ran in FullLanguage.)
