@@ -299,12 +299,16 @@ Collected the hard way, each one field-tested:
 <summary><b>Tested on</b></summary>
 
 - Windows 11 Pro 26100, Windows PowerShell 5.1.26100
-- Claude Code, `SessionStart` hook with `matcher: "compact"`, verified end to end
-  by compacting a real session and observing the injection arrive
+- Claude Code, `SessionStart` hook with `matcher: "compact"`, verified end to end by
+  compacting a real session and watching the injection arrive
 - Smart App Control enforcing; PowerShell 7 not tested
 
-Everything in this README was measured on that machine. Nothing is inferred.
+Installed and verified once on a second Windows machine by someone who had not
+seen the project before, from this page alone. The install prompt ran through,
+and the verification returned `C3 A9 C3 A8 E2 86 92` - correct UTF-8 under a forced
+cp1252 console, which is the condition an unfixed hook fails.
 
+Everything in this README was measured. Nothing is inferred.
 </details>
 
 <details>
