@@ -104,7 +104,25 @@ right after a compaction, and you will know it worked.
 <details>
 <summary><b>Uninstall</b></summary>
 
-Paste this instead:
+One command in PowerShell. It restores the backup the install made and deletes
+the hook script:
+
+```powershell
+$c = "$env:USERPROFILE\.claude"
+if (Test-Path "$c\settings.json.bak-autohook") {
+  Copy-Item "$c\settings.json.bak-autohook" "$c\settings.json" -Force
+  Remove-Item "$c\settings.json.bak-autohook" -Force
+  "settings.json restored"
+} else { "no backup found - remove the SessionStart compact entry by hand" }
+Remove-Item "$c\hooks\post-compact-reminder.ps1" -Force -ErrorAction SilentlyContinue
+"hook removed"
+```
+
+It restores the backup, so anything else you changed in `settings.json` after
+installing goes back too. Minutes after an install that is nothing; months later
+it might not be, and then the paste below is the safer route.
+
+Or paste this into Claude Code instead:
 
 ```
 Remove the AutoHook post-compaction hook from this machine: delete the
@@ -112,7 +130,6 @@ Remove the AutoHook post-compaction hook from this machine: delete the
 post-compact-reminder.ps1 from %USERPROFILE%\.claude\settings.json, keep the rest
 of the file intact, then delete %USERPROFILE%\.claude\hooks\post-compact-reminder.ps1.
 ```
-
 </details>
 
 <details>
