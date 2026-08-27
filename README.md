@@ -128,6 +128,7 @@ If you would rather type it out yourself, two rules:
 - Save the `.ps1` as **pure ASCII, no BOM**. PowerShell 5.1 reads a BOM-less
   file as ANSI, so any non-ASCII character in the script itself is a second
   instance of the same bug.
+
 ## Notes for anyone writing Claude Code hooks on Windows
 
 Collected the hard way, each one field-tested:
