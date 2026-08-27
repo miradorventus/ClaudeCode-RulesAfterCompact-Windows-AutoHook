@@ -8,6 +8,11 @@ silently destroys every accented character before Claude ever reads it.
 
 Copy this and paste it into Claude Code. Nothing to download, nothing to run.
 
+Claude Code will stop and ask your permission partway through, because both
+files it needs to touch live outside your project folder. That prompt is the
+install working, not failing. Approve it: it edits exactly one file, `settings.json`,
+and backs it up first.
+
 ```
 Install a post-compaction rules reminder hook for Claude Code on this Windows machine.
 
@@ -32,6 +37,8 @@ STEP 1 - Create %USERPROFILE%\.claude\hooks\post-compact-reminder.ps1 with exact
 Save it as pure ASCII with no BOM.
 
 STEP 2 - Back up %USERPROFILE%\.claude\settings.json (copy it to settings.json.bak-autohook),
+This file is outside the project directory, so ask me for permission in one go,
+saying plainly that you are editing settings.json and nothing else.
 then add this entry. Merge carefully - do NOT overwrite anything:
   - if there is no "hooks" object, create it;
   - if "hooks" exists but has no "SessionStart", add that key;
