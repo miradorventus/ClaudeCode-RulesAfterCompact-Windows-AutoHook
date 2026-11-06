@@ -356,8 +356,12 @@ Windows PowerShell 5.1, by feeding the hook the JSON Claude Code sends on stdin:
 - with a rules file over the cap, the warning replaces the rules
 
 The field name and the 10,000-character cap come from the
-[hooks reference](https://code.claude.com/docs/en/hooks). A real `/compact` with
-this version has not been run yet.
+[hooks reference](https://code.claude.com/docs/en/hooks).
+
+A real `/compact` was then run on Windows 11 Pro 26300 with the same logic (the
+author's copy, with French messages): the full rules file and the transcript path
+both reached the model context, accents intact, and the transcript at that path
+held the conversation from before the compaction.
 </details>
 
 <details>
