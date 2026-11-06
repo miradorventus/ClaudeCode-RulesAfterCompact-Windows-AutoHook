@@ -4,6 +4,11 @@
 conversation. This puts them back.** For Windows, where the obvious fix
 silently destroys every accented character before Claude ever reads it.
 
+It also tells Claude where the full transcript is. Compaction keeps a summary,
+and a summary drops details; the transcript on disk does not. After each
+compaction Claude gets its path, so an exact value, path or command from before
+the compaction can be re-read instead of recalled from the summary.
+
 ## Install
 
 Copy this and paste it into Claude Code. Nothing to download, nothing to run.
@@ -24,14 +29,36 @@ STEP 1 - Create %USERPROFILE%\.claude\hooks\post-compact-reminder.ps1 with exact
     # report utf-8 while the stream is still mangled. It must be ASSIGNED.
     [Console]::OutputEncoding = [Text.UTF8Encoding]::new(0)
 
+    # Claude Code caps hook stdout at 10,000 characters, then keeps a preview only.
+    $cap = 10000
+
+    # Hook input is JSON on stdin. Read it only when redirected: run by hand
+    # from a console, ReadToEnd() would wait forever.
+    $transcript = $null
+    if ([Console]::IsInputRedirected) {
+        try { $transcript = ([Console]::In.ReadToEnd() | ConvertFrom-Json).transcript_path } catch {}
+    }
+
+    $footer = ""
+    if ($transcript) {
+        $footer = "`n`n---`nFull transcript of this session, including everything before the compaction: $transcript`n" +
+                  "Before stating a detail from before the compaction (a value, a path, a command), re-read it there."
+    }
+
     if (-not (Test-Path -LiteralPath $RulesFile)) {
-        Write-Output "Context was compacted, but no rules file was found at: $RulesFile"
+        Write-Output ("Context was compacted, but no rules file was found at: $RulesFile" + $footer)
         exit 0
     }
 
-    Write-Output "Context was just compacted. Your standing rules are restored below - they apply to everything that follows."
-    Write-Output ""
-    Write-Output (Get-Content -Raw -Encoding UTF8 -LiteralPath $RulesFile)
+    $out = "Context was just compacted. Your standing rules are restored below - they apply to everything that follows.`n`n" +
+           (Get-Content -Raw -Encoding UTF8 -LiteralPath $RulesFile) + $footer
+
+    if ($out.Length -gt $cap) {
+        $out = "Context was just compacted. Your rules file is too long to be injected ($($out.Length) characters, " +
+               "the hook limit is $cap). Tell the user, then read $RulesFile in full before doing anything else." + $footer
+    }
+
+    Write-Output $out
     exit 0
 
 Save it as pure ASCII with no BOM.
@@ -236,6 +263,13 @@ The hook injects the **whole** rules file, every time the conversation is
 compacted. That is a recurring token cost, so keep the file short: a page of
 standing rules is the right size, a 76 KB architecture document is not.
 
+There is also a hard limit. Claude Code caps a hook's stdout at **10,000
+characters**; above that it saves the output to a file, passes Claude only a
+2,000-character preview, and does not ask Claude to read the rest. The cap
+cannot be raised. Rather than let your rules be cut to a preview without
+anyone noticing, the hook checks its own output length: over the cap, it tells
+Claude the file is too long, to say so to you, and to read it in full.
+
 If your rules file is large, point the hook at a short summary instead and let
 Claude read the full document on demand:
 
@@ -254,7 +288,7 @@ reliable and costs more. Pick per file size.
 <summary><b>Reading it before you run it</b></summary>
 
 You should not paste a prompt that writes a script onto your machine without
-knowing what the script does. It is twenty lines, and both pieces are here:
+knowing what the script does. It is about forty lines, and both pieces are here:
 
 - [hooks/post-compact-reminder.ps1](hooks/post-compact-reminder.ps1) - the hook
 - [settings.example.json](settings.example.json) - the settings entry
@@ -312,6 +346,18 @@ had not seen the project, working from this page alone:
 
 Every link is measured: disk, PowerShell, hook stdout, model context. Nothing in
 this README is inferred.
+
+**Transcript path and length check** (added later), tested on Windows 11 Pro 26300,
+Windows PowerShell 5.1, by feeding the hook the JSON Claude Code sends on stdin:
+
+- with `transcript_path` on stdin, the path is printed after the rules
+- with no stdin at all (the check in step 3), the hook still exits at once, and
+  the byte check still returns `C3 A9 C3 A8 E2 86 92`
+- with a rules file over the cap, the warning replaces the rules
+
+The field name and the 10,000-character cap come from the
+[hooks reference](https://code.claude.com/docs/en/hooks). A real `/compact` with
+this version has not been run yet.
 </details>
 
 <details>
