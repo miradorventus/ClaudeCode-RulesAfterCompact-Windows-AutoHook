@@ -14,6 +14,10 @@
     Claude can re-read an exact value, path or command instead of trusting the
     summary.
 
+    If build-thread.ps1 sits next to this script, it also builds the
+    conversation thread (every user message in full, with pointers into the
+    transcript) and prints its path with instructions to read it.
+
     The single most important line in this file is the OutputEncoding assignment
     below. Without it, Windows PowerShell re-encodes stdout in the console's ANSI
     codepage; Claude Code then decodes it as UTF-8 and every non-ASCII character
@@ -48,6 +52,29 @@ $footer = ""
 if ($transcript) {
     $footer = "`n`n---`nFull transcript of this session, including everything before the compaction: $transcript`n" +
               "Before stating a detail from before the compaction (a value, a path, a command), re-read it there."
+
+    # Optional: the conversation thread, built by build-thread.ps1 if it sits
+    # next to this script. Every user message in full, with pointers into the
+    # transcript, small enough to be read in full.
+    $builder = Join-Path $PSScriptRoot "build-thread.ps1"
+    if (Test-Path -LiteralPath $builder) {
+        try {
+            $thread = & $builder -Transcript $transcript
+            $size = [IO.File]::ReadAllText($thread, [Text.Encoding]::UTF8).Length
+            $footer += "`nConversation thread (every user message in full, where each reply is, verified actions): $thread`n"
+            # Up to 40,000 characters (about 10,000 tokens) the thread is read in
+            # full. Beyond that, a full read costs too much: search, then read.
+            if ($size -le 40000) {
+                $footer += "Read it IN FULL before stating what was asked, done or decided. For a detail, read the reply " +
+                           "or the transcript line it points to (commands at the top of the thread)."
+            } else {
+                $footer += "It is $size characters: search it with several keywords (synonyms too), read IN FULL every " +
+                           "message found and its neighbours, then the reply or line it points to. Never conclude from an empty search."
+            }
+        } catch {
+            $footer += "`nConversation thread: build failed ($($_.Exception.Message))."
+        }
+    }
 }
 
 if (-not (Test-Path -LiteralPath $RulesFile)) {
